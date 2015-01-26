@@ -1,7 +1,8 @@
 var Agenda = require('agenda');
 var twitter = require('twitter');
 var mongoose = require('mongoose');
-var models = require('../models/models')
+var models = require('../models/models');
+var linker = require('text-autolinker');
 var agenda = new Agenda({db:{address:'127.0.0.1/celebtweets'}});
 
 /*-------------------------------TWITTER CONIG---------------------------------*/
@@ -28,16 +29,27 @@ var jobs = function(){
 			Celebs.find({},null,null,function(err,data){
 				
 				data.forEach(function(celeb){
-					Twitter.get('statuses/user_timeline', {'screen_name': celeb.screenName, 'trime_user': true, 'since_id':celeb.lastId, 'count':3},function(error, params, tweets){
+					Twitter.get('statuses/user_timeline', {'screen_name': celeb.screenName, 'trime_user': true, 'count':3},function(error, params, tweets){
 						var t = JSON.parse(JSON.stringify(params));
-
-						celeb.lastId = t[0].id;
+						
+						//celeb.lastId = t[0].id;
 						celeb.save();
 						t.forEach(function(tweet){ 
 							var newTweet = new Tweets();
 							newTweet.screenName = celeb.screenName;
-							newTweet.tweet = tweet;
+							
+							var options = {
+								text:tweet.text,
+								expandedUrls: false
+
+							};
+							linker.parse(options, function(error, result){
+								console.log(result.html);
+								tweet['html'] = result.html;
+								newTweet.tweet = tweet;
 							newTweet.save();
+							});
+							
 						});
 						
 					});
@@ -47,7 +59,7 @@ var jobs = function(){
 			
 			
 		});
-		//agenda.schedule('in 10 seconds', 'fetch tweets', {time: new Date()});
+		agenda.schedule('in 2 seconds', 'fetch tweets', {time: new Date()});
 		agenda.start();
 	
 }

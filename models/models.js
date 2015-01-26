@@ -1,13 +1,15 @@
 var mongoose = require('mongoose');
 
 var celebSchema = mongoose.Schema({
+	name: String,
 	screenName: String,
+	category: String,
 	lastId: Number
 });
 
 var tweetsSchema = mongoose.Schema({
 	screenName: String,
-	tweet: mongoose.Schema.Types.Mixed
+	tweet: mongoose.Schema.Types.Mixed,
 });
 
 var models = {
